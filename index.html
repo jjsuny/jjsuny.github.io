@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jeffjiang.me</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #333;
+            height: 100vh;
+            width: 100vw;
+            overflow-x: hidden; /* Hide horizontal scrollbar */
+        }
+        body::-webkit-scrollbar {
+            display: none;
+        }
+        .main-content {
+            width: 800px;
+            height: 800px;
+            margin-left: 50%;
+            transform: translateX(-50%);
+            padding-top: 200px;
+        }
+        h1 {
+            font-family: 'Inter', sans-serif;
+            font-weight: bold;
+            color: white;
+            font-size: 40px;
+            width: 400px;
+        }
+        p {
+            font-family: 'Inter', sans-serif;
+            color: white;
+            font-weight: 100;
+        }
+        .second-content {
+            display: flex;
+        }
+        .button-div {
+            width: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            background-color:
+        }
+        .content-div {
+            display: none; /* Initially hide all content sections */
+            width: 650px;
+            height: 650px;
+        }
+        .content-div.active {
+            width: 650px;
+            height: 650px;
+            display: block; /* Display the active content section */
+            margin-top: 8px;
+        }
+        .button-about, .button-resume {
+            background-color: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            margin-bottom: 8px;
+            margin-top: 8px;
+            margin-right: 8px;
+            padding: 0px;
+        }
+        .button-about:hover, .button-about.active,
+        .button-resume:hover, .button-resume.active {
+            font-weight: bold;
+        }
+        .button-about:focus, .button-resume:focus {
+            outline: none;
+        }
+        iframe {
+            width: 650px;
+            height: 900px;
+        }
+        h2 {
+            margin-top: 36px;
+            font-family: 'Inter', sans-serif;
+            font-weight: bold;
+            color: white;
+            font-size: 20px;
+            font-weight: 300;
+        }
+        a:link, a:hover {
+            color: white;
+            background-color: gray;
+            text-decoration: none;
+            padding: 4px;
+        }
+        ::selection {
+            background-color: rgb(168, 167, 167);
+        }
+        .underline {
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-content">
+        <h1 class="typewriter"></h1>
+        <div class="second-content">
+            <div class="button-div">
+                <button class="button-about active" onclick="showContent('about')">about me</button>
+                <button class="button-resume" onclick="showContent('resume')">resume</button>
+            </div>
+            <div id="about" class="content-div active">
+                <p>Currently, I am an undergraduate studying both Finance & Information Systems at the University of Maryland, College Park, where I helped teach quantitative modeling and research
+                    AI investment signaling theory. With a background in the intersection between finance and tech, I hope to bring unique perspectives to all areas of my future work.</p>
+                <p>Professionally, I have worked through various experiences and projects to help bridge the gap between these two fields. From incorporating code in my excel projects as a FP&A
+                    intern at Carrier to researching the role of machine learning in financial modeling and forecasting at BigThink AI, my academic journey has been both challenging and rewarding.</p>
+                    <p>Outside of my academic pursuits, I study wealth building investment techniques and learn about different financial markets. 
+                        I also enjoy exploring <span class="underline" onclick="cycleTopic()">politics 📋🖋</span>.
+                    </p> 
+                <p>
+                    I love experimenting with new interests and building fruitful relationships.
+                </p>
+                <h2>
+                    Feel free to reach out, <a href="mailto: jjsun@umd.edu">jjsun [at] umd [dot] edu</a>
+                </h2>
+            </div>
+            <div id="resume" class="content-div">
+                <iframe src="jiang_resume.pdf"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const div = document.querySelector(".typewriter");
+        const texts = ["hi, i'm jeff", "nice to meet you"];
+        let currentTextIndex = 0;
+
+        function textTypingEffect(element, text) {
+            let i = 0;
+            let typingInterval = setInterval(() => {
+                element.textContent = text.substring(0, i) + "|";
+                i++;
+                if (i > text.length) {
+                    clearInterval(typingInterval);
+                    setTimeout(() => {
+                        eraseText(element, text);
+                    }, 500);
+                }
+            }, 200);
+        }
+
+        function eraseText(element, text) {
+            let i = text.length;
+            let erasingInterval = setInterval(() => {
+                element.textContent = text.substring(0, i) + "|";
+                i--;
+                if (i < 0) {
+                    clearInterval(erasingInterval);
+                    setTimeout(() => {
+                        currentTextIndex = (currentTextIndex + 1) % texts.length;
+                        textTypingEffect(element, texts[currentTextIndex]);
+                    }, 500);
+                }
+            }, 100);
+        }
+
+        textTypingEffect(div, texts[currentTextIndex]);
+                let currentTopic = "politics";
+        const topics = ["politics 📋🖋", "ethics ⚖️🧑‍⚖️", "philosophy 🤔💭"];
+
+        function cycleTopic() {
+        let currentTopicIndex = topics.indexOf(currentTopic);
+        currentTopicIndex = (currentTopicIndex + 1) % topics.length;
+        currentTopic = topics[currentTopicIndex];
+        document.querySelector(".underline").textContent = currentTopic;
+        }
+
+        function showContent(section) {
+            document.querySelectorAll('.content-div').forEach(function(el) {
+                el.classList.remove('active');
+            });
+            document.getElementById(section).classList.add('active');
+            document.querySelectorAll('.button-about, .button-resume').forEach(function(el) {
+                el.classList.remove('active');
+            });
+            document.querySelector(`.button-${section}`).classList.add('active');
+        }
+    </script>
+</body>
+</html>
