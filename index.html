@@ -998,11 +998,11 @@ function drawWorld() {
   for (const [qlon, qlat, v] of DOTS) {
     const [x, y] = proj(qlon / 2, qlat / 2, cssW, cssH);
     if (v) { visitedDots.push([x, y]); continue; }
-    wcx.fillStyle = '#26314d';
+    wcx.fillStyle = '#2e3c5e';
     wcx.beginPath(); wcx.arc(x, y, r, 0, 7); wcx.fill();
   }
   // stamped countries: soft accent tint only — the pins carry the bright color
-  wcx.fillStyle = `rgba(${PAL.a.join(',')},0.3)`;
+  wcx.fillStyle = `rgba(${PAL.a.join(',')},0.5)`;
   for (const [x, y] of visitedDots) {
     wcx.beginPath(); wcx.arc(x, y, r * 1.05, 0, 7); wcx.fill();
   }
