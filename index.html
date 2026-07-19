@@ -219,9 +219,9 @@
   .pin.minor { width: 18px; height: 18px; margin: -9px 0 0 -9px; z-index: 2; cursor: default; }
   .pin.minor .dot {
     width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px;
-    background: rgba(var(--accent-rgb), 0.55); box-shadow: none;
+    background: rgba(223, 230, 243, 0.8); box-shadow: 0 0 4px rgba(223, 230, 243, 0.45);
   }
-  .pin.minor:hover .dot { transform: scale(1.6); background: var(--amber); }
+  .pin.minor:hover .dot { transform: scale(1.7); background: #fff; }
 
   .place-card {
     position: absolute; z-index: 5; width: 300px; max-width: calc(100% - 24px);
@@ -264,26 +264,40 @@
   .map-legend .sw { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; vertical-align: 0; }
   .sw.amber { background: var(--amber); box-shadow: 0 0 8px rgba(var(--accent-rgb),0.8); }
   .sw.cyan { background: var(--cyan); box-shadow: 0 0 8px rgba(var(--accent2-rgb),0.8); }
+  .sw.white { background: #dfe6f3; box-shadow: 0 0 6px rgba(223, 230, 243, 0.6); }
   .sw.dim { background: #2a3550; }
   .map-stats { margin-left: auto; color: var(--text); }
   .map-stats b { color: var(--amber); font-weight: 600; }
   .standby {
-    margin-top: 26px; border: 1.5px dashed rgba(125, 155, 205, 0.3);
-    border-radius: 12px; padding: 18px 20px;
+    margin-top: 18px; border: 1px solid var(--line); border-radius: 12px;
+    background: rgba(11, 17, 30, 0.6); overflow: hidden;
   }
-  .standby-head {
-    font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px;
-    color: var(--muted); margin-bottom: 14px;
+  .standby-toggle {
+    width: 100%; display: flex; align-items: center; gap: 12px;
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 2.5px;
+    color: var(--muted); background: transparent; border: none;
+    padding: 15px 20px; cursor: pointer; transition: color 0.2s;
+    text-align: left;
   }
-  .standby-head b { color: var(--amber); font-weight: 600; }
-  .standby-chips { display: flex; flex-wrap: wrap; gap: 9px; }
-  .ticket {
-    font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 1px;
-    color: var(--muted); border: 1px solid var(--line); border-radius: 6px;
-    padding: 8px 13px; transition: all 0.2s; cursor: default;
+  .standby-toggle:hover { color: var(--amber); }
+  .standby-toggle b { color: var(--amber); font-weight: 600; }
+  .standby-toggle .chev { margin-left: auto; transition: transform 0.3s; color: var(--amber); }
+  .standby.open .chev { transform: rotate(90deg); }
+  .standby-body { max-height: 0; overflow: hidden; transition: max-height 0.5s ease; }
+  .standby.open .standby-body { max-height: 600px; }
+  .standby-list {
+    padding: 2px 20px 18px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 2px 32px;
   }
-  .ticket b { color: var(--amber); font-weight: 600; margin-right: 7px; }
-  .ticket:hover { border-color: var(--amber); color: var(--text); transform: translateY(-2px); }
+  .srow {
+    display: flex; align-items: baseline; gap: 10px;
+    font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 1.5px;
+    color: var(--text); padding: 8px 0;
+  }
+  .srow b { color: var(--amber); font-weight: 600; }
+  .srow .lead { flex: 1; border-bottom: 1px dotted rgba(125, 155, 205, 0.3); }
+  .srow .st { font-size: 9px; letter-spacing: 2px; color: var(--muted); }
 
   /* ---------- flight log (boarding passes) ---------- */
   .passes { display: flex; flex-direction: column; gap: 18px; }
@@ -462,24 +476,29 @@
     </div>
     <div class="map-legend">
       <span><span class="sw cyan"></span>HOME BASE</span>
-      <span><span class="sw amber"></span>STAMPED</span>
+      <span><span class="sw amber"></span>FEATURED</span>
+      <span><span class="sw white"></span>CITIES</span>
       <span><span class="sw dim"></span>ON THE LIST</span>
       <span class="map-stats"><b>13</b> COUNTRIES · <b>30+</b> CITIES · <b>∞</b> MEALS</span>
     </div>
-    <div class="standby">
-      <div class="standby-head">▸ STANDBY LIST — <b>NEXT STAMPS</b></div>
-      <div class="standby-chips">
-        <span class="ticket"><b>KEF</b>ICELAND</span>
-        <span class="ticket"><b>AUS</b>TEXAS</span>
-        <span class="ticket"><b>HNL</b>HAWAII</span>
-        <span class="ticket"><b>ZRH</b>SWITZERLAND</span>
-        <span class="ticket"><b>MNL</b>PHILIPPINES</span>
-        <span class="ticket"><b>KUL</b>MALAYSIA</span>
-        <span class="ticket"><b>OSL</b>NORWAY</span>
-        <span class="ticket"><b>IST</b>TURKEY</span>
-        <span class="ticket"><b>DXB</b>DUBAI</span>
-        <span class="ticket"><b>SYD</b>AUSTRALIA</span>
-        <span class="ticket"><b>GRU</b>BRAZIL</span>
+    <div class="standby" id="standby">
+      <button class="standby-toggle" id="standbyToggle" aria-expanded="false" aria-controls="standbyBody">
+        ✈ &nbsp;STANDBY LIST — <b>11 NEXT STAMPS</b><span class="chev">▸</span>
+      </button>
+      <div class="standby-body" id="standbyBody">
+        <div class="standby-list">
+          <span class="srow"><b>KEF</b> ICELAND<span class="lead"></span><span class="st">STANDBY</span></span>
+          <span class="srow"><b>AUS</b> TEXAS<span class="lead"></span><span class="st">STANDBY</span></span>
+          <span class="srow"><b>HNL</b> HAWAII<span class="lead"></span><span class="st">STANDBY</span></span>
+          <span class="srow"><b>ZRH</b> SWITZERLAND<span class="lead"></span><span class="st">STANDBY</span></span>
+          <span class="srow"><b>MNL</b> PHILIPPINES<span class="lead"></span><span class="st">STANDBY</span></span>
+          <span class="srow"><b>KUL</b> MALAYSIA<span class="lead"></span><span class="st">STANDBY</span></span>
+          <span class="srow"><b>OSL</b> NORWAY<span class="lead"></span><span class="st">STANDBY</span></span>
+          <span class="srow"><b>IST</b> TURKEY<span class="lead"></span><span class="st">STANDBY</span></span>
+          <span class="srow"><b>DXB</b> DUBAI<span class="lead"></span><span class="st">STANDBY</span></span>
+          <span class="srow"><b>SYD</b> AUSTRALIA<span class="lead"></span><span class="st">STANDBY</span></span>
+          <span class="srow"><b>GRU</b> BRAZIL<span class="lead"></span><span class="st">STANDBY</span></span>
+        </div>
       </div>
     </div>
   </section>
@@ -953,27 +972,6 @@ let MW = 0, MH = 0, visitedDots = [];
 function proj(lon, lat, w, h) {
   return [ (lon + 180) / 360 * w, (LAT_TOP - lat) / (LAT_TOP - LAT_BOT) * h ];
 }
-let glowCache = null, glowKey = '';
-function glowSprite(r) {
-  const dpr = devicePixelRatio || 1;
-  const key = PAL.a.join(',') + '|' + r.toFixed(2) + '|' + dpr;
-  if (glowCache && glowKey === key) return glowCache;
-  const S = Math.ceil((r + 5) * 2);
-  const c = document.createElement('canvas');
-  c.width = c.height = Math.ceil(S * dpr);
-  const g = c.getContext('2d');
-  g.scale(dpr, dpr);
-  const half = S / 2;
-  const grad = g.createRadialGradient(half, half, 0, half, half, half);
-  grad.addColorStop(0, `rgba(${PAL.a.join(',')},1)`);
-  grad.addColorStop(0.3, `rgba(${PAL.a.join(',')},0.85)`);
-  grad.addColorStop(0.55, `rgba(${PAL.a.join(',')},0.22)`);
-  grad.addColorStop(1, `rgba(${PAL.a.join(',')},0)`);
-  g.fillStyle = grad;
-  g.fillRect(0, 0, S, S);
-  glowCache = { c, S }; glowKey = key;
-  return glowCache;
-}
 function drawWorld() {
   const cssW = mapInner.clientWidth;
   const cssH = Math.max(300, Math.round(cssW * 0.52));
@@ -1003,10 +1001,10 @@ function drawWorld() {
     wcx.fillStyle = '#26314d';
     wcx.beginPath(); wcx.arc(x, y, r, 0, 7); wcx.fill();
   }
-  // glow via pre-rendered sprite — per-dot shadowBlur is far too slow at 1000+ dots
-  const { c: glow, S } = glowSprite(r * 1.15);
+  // stamped countries: soft accent tint only — the pins carry the bright color
+  wcx.fillStyle = `rgba(${PAL.a.join(',')},0.3)`;
   for (const [x, y] of visitedDots) {
-    wcx.drawImage(glow, x - S / 2, y - S / 2, S, S);
+    wcx.beginPath(); wcx.arc(x, y, r * 1.05, 0, 7); wcx.fill();
   }
   layoutPins();
   drawArcs();
@@ -1112,8 +1110,16 @@ const secIo = new IntersectionObserver(entries => {
 document.querySelectorAll('main section[id]').forEach(s => secIo.observe(s));
 
 /* ---------- UI sounds on interactive elements ---------- */
-document.querySelectorAll('a, button, .chip, .pass, .crate, .ticket').forEach(el => {
+document.querySelectorAll('a, button, .chip, .pass, .crate').forEach(el => {
   el.addEventListener('mouseenter', () => Sound.hover());
+});
+
+/* ---------- standby list toggle ---------- */
+const standbyEl = document.getElementById('standby');
+document.getElementById('standbyToggle').addEventListener('click', () => {
+  const open = standbyEl.classList.toggle('open');
+  document.getElementById('standbyToggle').setAttribute('aria-expanded', open);
+  if (open) Sound.whoosh();
 });
 document.querySelectorAll('a, button:not(.pal-swatch)').forEach(el => {
   el.addEventListener('click', () => Sound.click());
