@@ -120,6 +120,12 @@
 
   .reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.7s ease, transform 0.7s ease; }
   .reveal.in { opacity: 1; transform: none; }
+  .rv { opacity: 0; transition: opacity 0.35s ease; }
+  .rv.in { opacity: 1; animation: riseIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(36px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
 
   /* ---------- hero ---------- */
   #home {
@@ -870,6 +876,9 @@ applyPalette();
       const a = reduced ? 0.5 : 0.28 + 0.32 * Math.sin(t * s.sp * 2 + s.tw);
       cx.globalAlpha = Math.max(0.08, a);
       cx.fillStyle = '#cdd8ea';
+      // slow downward drift, wrapping at the bottom
+      s.y += s.sp * 0.22 * devicePixelRatio;
+      if (s.y > H + 4) { s.y = -4; s.x = Math.random() * W; }
       const px = s.x + mx * 18 * s.sp * devicePixelRatio;
       const py = s.y + my * 18 * s.sp * devicePixelRatio;
       cx.beginPath(); cx.arc(px, py, s.r * devicePixelRatio, 0, 7); cx.fill();
@@ -1110,13 +1119,28 @@ drawWorld();
 const revealed = new Set();
 const io = new IntersectionObserver(entries => {
   for (const en of entries) {
+    en.target.classList.toggle('in', en.isIntersecting);
+    if (en.isIntersecting && !revealed.has(en.target)) { revealed.add(en.target); Sound.whoosh(); }
+  }
+}, { threshold: 0.06 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+// card-level reveals: animate in scrolling down, fade out scrolling away, staggered
+const rvIo = new IntersectionObserver(entries => {
+  for (const en of entries) {
+    const el = en.target;
     if (en.isIntersecting) {
-      en.target.classList.add('in');
-      if (!revealed.has(en.target)) { revealed.add(en.target); Sound.whoosh(); }
+      el.style.animationDelay = ([...el.parentElement.children].indexOf(el) % 6) * 80 + 'ms';
+      el.classList.add('in');
+    } else {
+      el.classList.remove('in');
     }
   }
-}, { threshold: 0.12 });
-document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+}, { threshold: 0.15, rootMargin: '0px 0px -6% 0px' });
+document.querySelectorAll('.passes .pass, .cargo .crate, .edu-grid .edu-card').forEach(el => {
+  el.classList.add('rv');
+  rvIo.observe(el);
+});
 
 const navLinks = document.querySelectorAll('[data-nav]');
 const secIo = new IntersectionObserver(entries => {
@@ -1144,21 +1168,7 @@ document.querySelectorAll('a, button, .chip, .pass, .crate').forEach(el => {
   new ResizeObserver(syncHeight).observe(smoothEl);
   syncHeight();
 
-  const sections = [...document.querySelectorAll('main section[id]')];
-  let snapT = null;
-  addEventListener('scroll', () => {
-    target = scrollY;
-    clearTimeout(snapT);
-    snapT = setTimeout(() => {
-      if (reduced) return;
-      let best = null, bestD = Infinity;
-      for (const s of sections) {
-        const d = Math.abs(s.offsetTop - target);
-        if (d < bestD) { bestD = d; best = s.offsetTop; }
-      }
-      if (best !== null && bestD > 2 && bestD < innerHeight * 0.35) scrollTo(0, best);
-    }, 240);
-  }, { passive: true });
+  addEventListener('scroll', () => { target = scrollY; }, { passive: true });
 
   (function loop() {
     cur += (target - cur) * (reduced ? 1 : 0.09);
