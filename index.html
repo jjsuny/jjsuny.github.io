@@ -1195,7 +1195,15 @@ const standbyEl = document.getElementById('standby');
 document.getElementById('standbyToggle').addEventListener('click', () => {
   const open = standbyEl.classList.toggle('open');
   document.getElementById('standbyToggle').setAttribute('aria-expanded', open);
-  if (open) Sound.whoosh();
+  if (open) {
+    Sound.whoosh();
+    // scroll the expanded list into view once it has unfolded
+    setTimeout(() => {
+      const bottom = standbyEl.offsetTop + standbyEl.offsetHeight;
+      const want = Math.min(bottom - innerHeight + 24, standbyEl.offsetTop - 80);
+      if (want > scrollY) scrollTo(0, want);
+    }, 360);
+  }
 });
 document.querySelectorAll('a, button:not(.pal-swatch)').forEach(el => {
   el.addEventListener('click', () => Sound.click());
