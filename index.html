@@ -25,7 +25,7 @@
     --font-mono: 'IBM Plex Mono', monospace;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html { scrollbar-width: none; }
   body {
     background: var(--bg);
     color: var(--text);
@@ -34,9 +34,23 @@
     line-height: 1.6;
   }
   ::selection { background: rgba(var(--accent-rgb),0.35); }
-  body::-webkit-scrollbar { width: 10px; }
-  body::-webkit-scrollbar-track { background: var(--bg); }
-  body::-webkit-scrollbar-thumb { background: #1c2a44; border-radius: 5px; }
+  body::-webkit-scrollbar { display: none; }
+
+  /* fluid scroll: content lerps inside a fixed wrapper over the still starfield */
+  #smooth {
+    position: fixed; top: 0; left: 0; width: 100%;
+    z-index: 1; will-change: transform;
+  }
+  #progress {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 4px;
+    background: rgba(125, 155, 205, 0.1); z-index: 55; pointer-events: none;
+  }
+  #progressFill {
+    width: 100%; height: 0%;
+    background: linear-gradient(180deg, var(--cyan), var(--amber));
+    box-shadow: 0 0 10px rgba(var(--accent-rgb),0.7);
+    border-radius: 0 0 3px 3px;
+  }
   a { color: var(--cyan); text-decoration: none; }
 
   /* ---------- starfield ---------- */
@@ -448,6 +462,7 @@
   </div>
 </nav>
 
+<div id="smooth">
 <main>
   <!-- HERO -->
   <section class="sec" id="home">
@@ -667,12 +682,14 @@
   </section>
 </main>
 
-<div id="toast">EMAIL COPIED — SEE YOU AT THE GATE ✈</div>
-
 <footer>
   <span class="path">BUF → MD → UMD → CHWY → ???</span><br><br>
   © 2026 JEFF JIANG · DESIGNED &amp; BUILT AT 36,000 FT
 </footer>
+</div>
+
+<div id="toast">EMAIL COPIED — SEE YOU AT THE GATE ✈</div>
+<div id="progress" aria-hidden="true"><div id="progressFill"></div></div>
 
 <script>
 'use strict';
@@ -760,7 +777,7 @@ const Sound = (() => {
       tone(783.99, 0.3, 0.1, 'triangle', 0.21);
     },
     hover() { tone(1500, 0.045, 0.05); },
-    click() { tone(720, 0.06, 0.11, 'square'); tone(1080, 0.09, 0.07, 'sine', 0.03); },
+    click() { tone(950, 0.05, 0.06, 'triangle'); tone(1400, 0.07, 0.04, 'sine', 0.02); },
     flap() { // split-flap tick, globally throttled
       const now = performance.now();
       if (now - lastTick < 26) return;
@@ -771,7 +788,7 @@ const Sound = (() => {
     chime() { // airline ding-dong
       tone(830, 0.9, 0.09); tone(659, 1.1, 0.09, 'sine', 0.28);
     },
-    stamp() { noise(0.09, 0.16, 300, 2); tone(180, 0.1, 0.12, 'square', 0.01); }
+    stamp() { noise(0.07, 0.07, 420, 2); tone(220, 0.08, 0.05, 'sine', 0.01); }
   };
 })();
 
@@ -874,7 +891,7 @@ function buildFlap(el, text) {
     el.appendChild(s);
   }
 }
-function runFlap(el, text, speed = 55) {
+function runFlap(el, text, speed = 100) {
   const cells = el.children;
   [...text].forEach((target, i) => {
     const cell = cells[i];
@@ -887,7 +904,7 @@ function runFlap(el, text, speed = 55) {
       cell.textContent = FLAPCHARS[show] || target;
       Sound.flap();
       if (cur >= targetIdx) clearInterval(start);
-    }, speed + i * 2);
+    }, speed + i * 6);
   });
 }
 const flapName = document.getElementById('flapName');
@@ -895,7 +912,7 @@ buildFlap(flapName, 'JEFF JIANG');
 let heroStarted = false;
 function startHero() {
   if (heroStarted) return; heroStarted = true;
-  setTimeout(() => runFlap(flapName, 'JEFF JIANG'), 350);
+  setTimeout(() => runFlap(flapName, 'JEFF JIANG'), 700);
   // cycling NEXT destination
   const dests = ['SOMEWHERE NEW', 'REYKJAVÍK · KEF', 'SYDNEY · SYD', 'ISTANBUL · IST', 'HONOLULU · HNL', 'ZÜRICH · ZRH', 'ANYWHERE W/ FOOD'];
   let di = 0;
@@ -922,6 +939,8 @@ const PLACES = [
     status: 'HOME BASE', blurb: 'Home base — Chewy FP&A by day, itinerary-building by night.' },
   { id: 'buffalo', name: 'Buffalo, NY', flag: '🇺🇸', code: 'BUF', lon: -78.88, lat: 42.89,
     status: 'ORIGIN · BORN HERE', blurb: 'Where it all started — the original departure gate.' },
+  { id: 'maryland', name: 'Maryland', flag: '🇺🇸', code: 'BWI', lon: -76.64, lat: 39.15,
+    status: 'RAISED HERE', blurb: 'Where I grew up — Old Bay on everything, and where the spreadsheet obsession began at UMD.' },
   { id: 'beijing', name: 'Beijing', flag: '🇨🇳', code: 'PEK', lon: 116.40, lat: 39.90,
     status: 'VISITED · ROOTS', blurb: '家 — family, history, and hands-down the best dumplings on the planet.' },
   { id: 'zhangjiajie', name: 'Zhangjiajie', flag: '🇨🇳', code: 'DYG', lon: 110.48, lat: 29.12,
@@ -1113,6 +1132,53 @@ document.querySelectorAll('main section[id]').forEach(s => secIo.observe(s));
 document.querySelectorAll('a, button, .chip, .pass, .crate').forEach(el => {
   el.addEventListener('mouseenter', () => Sound.hover());
 });
+
+/* ---------- fluid scroll: lerped content, gentle section snap, side progress ---------- */
+(() => {
+  const smoothEl = document.getElementById('smooth');
+  const fill = document.getElementById('progressFill');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let cur = scrollY, target = scrollY;
+
+  function syncHeight() { document.body.style.height = smoothEl.offsetHeight + 'px'; }
+  new ResizeObserver(syncHeight).observe(smoothEl);
+  syncHeight();
+
+  const sections = [...document.querySelectorAll('main section[id]')];
+  let snapT = null;
+  addEventListener('scroll', () => {
+    target = scrollY;
+    clearTimeout(snapT);
+    snapT = setTimeout(() => {
+      if (reduced) return;
+      let best = null, bestD = Infinity;
+      for (const s of sections) {
+        const d = Math.abs(s.offsetTop - target);
+        if (d < bestD) { bestD = d; best = s.offsetTop; }
+      }
+      if (best !== null && bestD > 2 && bestD < innerHeight * 0.35) scrollTo(0, best);
+    }, 240);
+  }, { passive: true });
+
+  (function loop() {
+    cur += (target - cur) * (reduced ? 1 : 0.09);
+    if (Math.abs(target - cur) < 0.3) cur = target;
+    smoothEl.style.transform = `translate3d(0, ${-cur}px, 0)`;
+    const max = Math.max(1, document.body.scrollHeight - innerHeight);
+    fill.style.height = Math.min(100, cur / max * 100) + '%';
+    requestAnimationFrame(loop);
+  })();
+
+  // anchors point into the fixed wrapper, so native jumps can't find them
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const t = document.getElementById(a.getAttribute('href').slice(1));
+      if (!t) return;
+      e.preventDefault();
+      scrollTo(0, t.id === 'home' ? 0 : t.offsetTop);
+    });
+  });
+})();
 
 /* ---------- standby list toggle ---------- */
 const standbyEl = document.getElementById('standby');
