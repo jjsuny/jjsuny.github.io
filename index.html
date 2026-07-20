@@ -802,6 +802,12 @@ const Sound = (() => {
     env(bp, t0, peak, dur);
     src.start(t0);
   }
+  // silence everything while the tab is hidden; pick back up on return
+  document.addEventListener('visibilitychange', () => {
+    if (!ctx) return;
+    if (document.hidden) ctx.suspend();
+    else if (on) ctx.resume();
+  });
   return {
     setOn, isOn: () => on,
     resume() { if (on) { init(); if (ctx.state === 'suspended') ctx.resume(); } },
