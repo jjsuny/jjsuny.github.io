@@ -1158,11 +1158,9 @@ addEventListener('resize', () => {
 drawWorld();
 
 /* ---------- scroll reveal + nav ---------- */
-const revealed = new Set();
 const io = new IntersectionObserver(entries => {
   for (const en of entries) {
     en.target.classList.toggle('in', en.isIntersecting);
-    if (en.isIntersecting && !revealed.has(en.target)) { revealed.add(en.target); Sound.whoosh(); }
   }
 }, { threshold: 0.06 });
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
