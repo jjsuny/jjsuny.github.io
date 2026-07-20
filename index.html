@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jeff Jiang</title>
 <meta name="description" content="Jeff Jiang — financial analyst at Chewy, UMD grad, traveler. Finance × tech × wanderlust.">
+<meta property="og:title" content="Jeff Jiang">
+<meta property="og:description" content="Financial analyst at Chewy · UMD grad · 13 countries stamped and counting. A travel-themed portfolio, with sound.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jjsuny.github.io/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✈️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -120,12 +124,7 @@
 
   .reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.7s ease, transform 0.7s ease; }
   .reveal.in { opacity: 1; transform: none; }
-  .rv { opacity: 0; transition: opacity 0.35s ease; }
-  .rv.in { opacity: 1; animation: riseIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
-  @keyframes riseIn {
-    from { opacity: 0; transform: translateY(36px) scale(0.98); }
-    to { opacity: 1; transform: none; }
-  }
+  .rv { opacity: 0; will-change: opacity, transform; }
 
   /* ---------- hero ---------- */
   #home {
@@ -531,10 +530,10 @@
 
       <div class="pass">
         <div class="pass-main">
-          <div class="pass-route"><span>NOW FLYING</span><span class="plane">✈</span><span>FLT CHWY-01</span></div>
+          <div class="pass-route"><span>NOW FLYING</span><span class="plane">✈</span><span>PLANTATION, FL · FLT CHWY-01</span></div>
           <div class="pass-org">Chewy</div>
-          <div class="pass-role">FINANCIAL ANALYST · 2025 — PRESENT</div>
-          <p class="pass-desc">Driving financial planning &amp; analysis at one of the largest e-commerce pet companies — forecasting, reporting, and turning messy data into decisions.</p>
+          <div class="pass-role">FINANCIAL ANALYST · JUN 2025 — PRESENT</div>
+          <p class="pass-desc">Rebuilt weekly reporting models into a simpler, scalable framework (50% faster cycles), automated G&amp;A and P&amp;L reporting with Oracle Hyperion + VBA-driven Excel (15+ hours saved per cycle), and own weekly forecasts that land within 3% of actuals.</p>
         </div>
         <div class="pass-stub">
           <span>SEAT <span class="big">1A</span></span>
@@ -623,6 +622,12 @@
   <section class="sec reveal" id="projects">
     <div class="sec-head"><span class="tag">03 / CARGO</span><h2>Projects</h2><span class="rule"></span></div>
     <div class="cargo">
+      <a class="crate" href="https://github.com/jjsun14/aftertaste" target="_blank" rel="noopener">
+        <span class="c-arrow">↗</span>
+        <div class="c-tag">REACT NATIVE · EXPO · SUPABASE</div>
+        <h3>Aftertaste</h3>
+        <p>A food journal for eating your way around the world — log restaurants as you travel, photo-journal every meal, rate and compare them. Travel &amp; food, naturally.</p>
+      </a>
       <a class="crate" href="https://github.com/jjsuny/jjsuny.github.io" target="_blank" rel="noopener">
         <span class="c-arrow">↗</span>
         <div class="c-tag">HTML · CSS · JS · WEB AUDIO</div>
@@ -656,6 +661,7 @@
       <div class="packing">
         <div class="k">PACKING LIST · INTERESTS</div>
         <div class="chips">
+          <span class="chip">⛳ golf</span>
           <span class="chip">🏋️ weightlifting</span>
           <span class="chip">♟️ chess</span>
           <span class="chip">🥾 hiking</span>
@@ -1131,22 +1137,7 @@ const io = new IntersectionObserver(entries => {
 }, { threshold: 0.06 });
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
-// card-level reveals: animate in scrolling down, fade out scrolling away, staggered
-const rvIo = new IntersectionObserver(entries => {
-  for (const en of entries) {
-    const el = en.target;
-    if (en.isIntersecting) {
-      el.style.animationDelay = ([...el.parentElement.children].indexOf(el) % 6) * 80 + 'ms';
-      el.classList.add('in');
-    } else {
-      el.classList.remove('in');
-    }
-  }
-}, { threshold: 0.15, rootMargin: '0px 0px -6% 0px' });
-document.querySelectorAll('.passes .pass, .cargo .crate, .edu-grid .edu-card').forEach(el => {
-  el.classList.add('rv');
-  rvIo.observe(el);
-});
+// cards fade continuously with scroll position — driven from the fluid-scroll loop
 
 const navLinks = document.querySelectorAll('[data-nav]');
 const secIo = new IntersectionObserver(entries => {
@@ -1176,12 +1167,25 @@ document.querySelectorAll('a, button, .chip, .pass, .crate').forEach(el => {
 
   addEventListener('scroll', () => { target = scrollY; }, { passive: true });
 
+  // scroll-linked card fades: opacity/lift track viewport position every frame
+  const rvEls = [...document.querySelectorAll('.passes .pass, .cargo .crate, .edu-grid .edu-card')];
+  rvEls.forEach(el => el.classList.add('rv'));
+
   (function loop() {
     cur += (target - cur) * (reduced ? 1 : 0.09);
     if (Math.abs(target - cur) < 0.3) cur = target;
     smoothEl.style.transform = `translate3d(0, ${-cur}px, 0)`;
     const max = Math.max(1, document.body.scrollHeight - innerHeight);
     fill.style.height = Math.min(100, cur / max * 100) + '%';
+    const vh = innerHeight;
+    for (const el of rvEls) {
+      if (reduced) { el.style.opacity = 1; el.style.transform = ''; continue; }
+      const r = el.getBoundingClientRect();
+      const inP = Math.max(0, Math.min(1, (vh * 0.96 - r.top) / (vh * 0.3)));
+      const outP = Math.max(0, Math.min(1, (r.bottom - vh * 0.04) / (vh * 0.16)));
+      el.style.opacity = Math.min(inP, outP).toFixed(3);
+      el.style.transform = (inP >= 1 && outP >= 1) ? '' : `translateY(${((1 - inP) * 46).toFixed(1)}px)`;
+    }
     requestAnimationFrame(loop);
   })();
 
