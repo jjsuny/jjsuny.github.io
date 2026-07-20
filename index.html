@@ -70,7 +70,7 @@
   /* ---------- nav ---------- */
   nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center;
     padding: 14px 28px;
     background: rgba(7, 11, 20, 0.72);
     backdrop-filter: blur(12px);
@@ -82,7 +82,8 @@
     color: var(--text); letter-spacing: 2px; font-size: 15px;
   }
   .nav-logo span { color: var(--amber); }
-  .nav-links { display: flex; gap: 4px; align-items: center; }
+  .nav-links { display: flex; gap: 4px; align-items: center; margin-left: auto; }
+  .nav-tools { display: flex; align-items: center; gap: 8px; margin-left: 14px; }
   .nav-links a {
     font-family: var(--font-mono); font-size: 12px; letter-spacing: 1.5px;
     color: var(--muted); padding: 8px 12px; border-radius: 5px;
@@ -96,7 +97,7 @@
     letter-spacing: 1px; transition: all 0.2s;
   }
   #soundToggle:hover { color: var(--amber); border-color: var(--amber); }
-  .palettes { display: flex; gap: 8px; align-items: center; margin-left: 12px; }
+  .palettes { display: flex; gap: 8px; align-items: center; }
   .pal-swatch {
     width: 15px; height: 15px; border-radius: 50%; cursor: pointer; padding: 0;
     border: 1px solid rgba(255, 255, 255, 0.28);
@@ -430,19 +431,38 @@
   }
   footer .path { color: var(--amber); }
 
+  .drag-hint { display: none; }
   @media (max-width: 760px) {
-    nav { padding: 12px 14px; }
-    .nav-links a { padding: 7px 7px; font-size: 11px; }
-    #soundToggle { margin-left: 2px; padding: 6px 9px; }
-    .palettes { margin-left: 4px; gap: 6px; }
-    .pal-swatch { width: 13px; height: 13px; }
+    nav { padding: 10px 14px 8px; flex-wrap: wrap; }
+    .nav-tools { margin-left: auto; }
+    .nav-links {
+      order: 3; width: 100%; margin: 6px 0 0;
+      justify-content: space-between; gap: 0;
+    }
+    .nav-links a { padding: 6px 4px; font-size: 11px; letter-spacing: 1px; }
+    #soundToggle { padding: 6px 9px; }
+    .palettes { gap: 6px; }
+    .pal-swatch { width: 14px; height: 14px; }
+    .flap-big .flap {
+      width: clamp(25px, 7.6vw, 34px); height: clamp(38px, 11vw, 50px);
+      font-size: clamp(17px, 5vw, 26px);
+    }
+    .flap-big .flap.sp { width: 12px; }
+    .flap-row { gap: 4px; }
+    .board-row { grid-template-columns: 58px 1fr 82px; gap: 8px; padding: 10px 12px; }
+    .board-row .v { font-size: 12px; letter-spacing: 0.5px; }
+    .board-row .s { font-size: 10px; }
+    .map-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .map-inner { width: 720px; }
+    .drag-hint { display: inline; color: var(--cyan); }
     .about-grid { grid-template-columns: 1fr; gap: 26px; }
     .edu-grid { grid-template-columns: 1fr; }
     .pass { flex-direction: column; }
     .pass-stub { width: 100%; border-left: none; border-top: 1.5px dashed rgba(125, 155, 205, 0.3); flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
     .barcode { width: 100%; }
     .sec { padding: 84px 16px 30px; }
-    .place-card { left: 12px !important; right: 12px; top: auto !important; bottom: 12px; width: auto; }
+    .place-card { top: auto !important; bottom: 12px; }
+    #progress { width: 3px; }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.15s !important; }
@@ -462,6 +482,8 @@
     <a href="#projects" data-nav>CARGO</a>
     <a href="#about" data-nav>ABOUT</a>
     <a href="#contact" data-nav>CONTACT</a>
+  </div>
+  <div class="nav-tools">
     <div class="palettes" id="palettes" role="group" aria-label="Color palette"></div>
     <button id="soundToggle" aria-label="Toggle sound">🔇 OFF</button>
   </div>
@@ -495,6 +517,7 @@
       </div>
     </div>
     <div class="map-legend">
+      <span class="drag-hint">← DRAG MAP →</span>
       <span><span class="sw cyan"></span>HOME BASE</span>
       <span><span class="sw amber"></span>FEATURED</span>
       <span><span class="sw white"></span>CITIES</span>
@@ -1105,6 +1128,14 @@ function openPlace(p) {
   if (left + cw > MW - 10) left = p.x - cw - 20;
   if (left < 10) left = 10;
   top = Math.max(10, Math.min(top, MH - ch - 10));
+  if (innerWidth <= 760) {
+    // mobile: bottom sheet pinned to the visible part of the pannable map
+    const wrap = document.querySelector('.map-wrap');
+    left = wrap.scrollLeft + 12;
+    placeCard.style.width = (wrap.clientWidth - 24) + 'px';
+  } else {
+    placeCard.style.width = '';
+  }
   placeCard.style.left = left + 'px';
   placeCard.style.top = top + 'px';
   placeCard.querySelector('.pc-close').addEventListener('click', closePlace);
@@ -1188,6 +1219,12 @@ document.querySelectorAll('a, button, .chip, .pass, .crate').forEach(el => {
     }
     requestAnimationFrame(loop);
   })();
+
+  // deep links: native hash jump can't reach into the fixed wrapper
+  if (location.hash) {
+    const t = document.getElementById(location.hash.slice(1));
+    if (t) { const y = t.offsetTop; scrollTo(0, y); cur = target = y; }
+  }
 
   // anchors point into the fixed wrapper, so native jumps can't find them
   document.querySelectorAll('a[href^="#"]').forEach(a => {
