@@ -736,7 +736,7 @@
 /* ---------- sound engine (all synthesized, no audio files) ---------- */
 const Sound = (() => {
   let ctx = null, master = null, humGain = null, on = false;
-  let lastTick = 0;
+  let lastTick = 0, lastHover = 0;
 
   function init() {
     if (ctx) return;
@@ -817,7 +817,36 @@ const Sound = (() => {
       tone(659.25, 0.14, 0.09, 'triangle', 0.14);
       tone(783.99, 0.3, 0.1, 'triangle', 0.21);
     },
-    hover() { tone(1500, 0.045, 0.05); },
+    hover() { // percussive tap + fast downward ping glide; throttled so rapid retriggers can't stack
+      if (!on || !ctx) return;
+      const now = performance.now();
+      if (now - lastHover < 45) return;
+      lastHover = now;
+      const t0 = ctx.currentTime;
+      // noise tap
+      const len = Math.ceil(ctx.sampleRate * 0.015);
+      const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 3000; bp.Q.value = 9;
+      const ng = ctx.createGain();
+      ng.gain.setValueAtTime(0.0001, t0);
+      ng.gain.linearRampToValueAtTime(0.26, t0 + 0.0005);
+      ng.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.015);
+      src.connect(bp).connect(ng).connect(master);
+      src.start(t0);
+      // faint ping gliding 1100->500 over 3ms
+      const o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(1100, t0);
+      o.frequency.exponentialRampToValueAtTime(500, t0 + 0.003);
+      const og = ctx.createGain();
+      og.gain.setValueAtTime(0.0001, t0);
+      og.gain.linearRampToValueAtTime(0.055, t0 + 0.0005);
+      og.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.014);
+      o.connect(og).connect(master);
+      o.start(t0); o.stop(t0 + 0.03);
+    },
     click() { tone(950, 0.05, 0.06, 'triangle'); tone(1400, 0.07, 0.04, 'sine', 0.02); },
     flap() { // split-flap tick, globally throttled
       const now = performance.now();
