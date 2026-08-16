@@ -381,6 +381,16 @@
   .about-text p { color: var(--muted); font-weight: 300; font-size: 15.5px; margin-bottom: 16px; }
   .about-text b { color: var(--text); font-weight: 500; }
   .about-text .zh { color: var(--amber); }
+  .cycle {
+    color: var(--amber); cursor: pointer; font-weight: 500;
+    border-bottom: 1.5px dotted rgba(var(--accent-rgb), 0.6);
+    transition: color 0.2s, border-color 0.2s;
+    -webkit-tap-highlight-color: transparent; outline: none;
+  }
+  .cycle:hover, .cycle:focus-visible { border-bottom-style: solid; }
+  .cycle::after {
+    content: ' ↻'; font-size: 0.75em; opacity: 0.55; vertical-align: 1px;
+  }
   .packing {
     border: 1px solid var(--line); border-radius: 12px; padding: 20px;
     background: rgba(11, 17, 30, 0.7);
@@ -501,7 +511,7 @@
       <div class="board-row"><span class="k">NEXT</span><span class="v" id="nextDest">SOMEWHERE NEW</span><span class="s boarding">BOARDING</span></div>
     </div>
     <p class="hero-tag">Finance <b>×</b> tech <b>×</b> a serious case of wanderlust.
-      I build <b>financial models</b> by day and <b>travel itineraries</b> by night — occasionally both at once.</p>
+      I like <b>building things</b> and turning tangled workflows into something clean — whether that's a finance model, a broken process, or a side project.</p>
     <div class="scroll-hint">SCROLL FOR DEPARTURES <span class="arrow">↓</span></div>
   </section>
 
@@ -667,10 +677,10 @@
     <div class="sec-head"><span class="tag">04 / MANIFEST</span><h2>About Me</h2><span class="rule"></span></div>
     <div class="about-grid">
       <div class="about-text">
-        <p>Hi — I'm Jeff <span class="zh">(姜)</span>, a Chinese-American numbers person — born in <b>Buffalo</b>, raised in <b>Maryland</b>, now soaking up the sun in <b>South Florida</b>.</p>
-        <p>By day I'm a <b>financial analyst at Chewy</b>, working in FP&amp;A. I studied <b>Finance &amp; Information Systems at the University of Maryland</b>, where I taught quantitative modeling and researched how AI announcements move markets — I like living exactly at the intersection of spreadsheets and software.</p>
-        <p>By every other hour, I'm planning the next trip. My roots run through <b>China</b>, and my passport has been making up for lost time ever since — <b>30+ cities</b> from Beijing's hutongs to Zhangjiajie's floating mountains to Bangkok's night markets. The best way to understand a place is to eat your way through it.</p>
-        <p>The rest of the time you'll find me lifting, playing chess or poker, cooking something new, or yelling at a Chargers game.</p>
+        <p>Hi, I'm Jeff <span class="zh">(姜)</span>. Born in <b>Buffalo</b>, raised in <b>Maryland</b>, now soaking up the sun in <b>South Florida</b>.</p>
+        <p>I went to the <b>University of Maryland</b> and graduated with a degree in Finance and Information Systems. Now I'm a <b>financial analyst at Chewy</b>, working mostly in FP&amp;A. Day to day that means automating the tedious parts of reporting, rebuilding messy processes into something that holds up, and building tools that make the numbers easier to trust. I also spent two years teaching a quantitative modeling course at Maryland. Mostly I'm drawn to <b>fintech</b>, where the finance and software sides run into each other.</p>
+        <p>Outside of work, I travel as much as I can, and I usually plan those trips around food. Eating your way through a place is how you actually get to know it.</p>
+        <p>The rest of the time you'll find me <span class="cycle" id="hobby" role="button" tabindex="0" title="click me">at the gym</span>.</p>
       </div>
       <div class="packing">
         <div class="k">PACKING LIST · INTERESTS</div>
@@ -696,7 +706,6 @@
     <div class="luggage">
       <div class="tag" style="font-family:var(--font-mono);font-size:11px;letter-spacing:3px;color:var(--amber);margin-bottom:14px;">05 / ARRIVALS</div>
       <h2>Let's fly somewhere.</h2>
-      <p class="sub">Whether it's finance, tech, travel tips, or a heated debate about the best dumpling style — my inbox is open.</p>
       <div class="contact-row">
         <button class="cbtn primary" id="copyEmail">✉ &nbsp;jjsun14@gmail.com</button>
         <a class="cbtn" href="mailto:jjsun14@gmail.com">SEND EMAIL</a>
@@ -1281,6 +1290,19 @@ document.getElementById('standbyToggle').addEventListener('click', () => {
 document.querySelectorAll('a, button:not(.pal-swatch)').forEach(el => {
   el.addEventListener('click', () => Sound.click());
 });
+
+/* ---------- interactive hobbies: click to cycle ---------- */
+(() => {
+  const el = document.getElementById('hobby');
+  if (!el) return;
+  const acts = ['at the gym', 'on a golf course', 'on a pickleball court',
+    'deep in a game of chess', 'at a poker table', 'cooking something new',
+    'learning something new'];
+  let i = 0;
+  const next = () => { i = (i + 1) % acts.length; el.textContent = acts[i]; Sound.hover(); };
+  el.addEventListener('click', next);
+  el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); next(); } });
+})();
 
 /* ---------- copy email ---------- */
 document.getElementById('copyEmail').addEventListener('click', async () => {
